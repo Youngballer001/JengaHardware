@@ -1,0 +1,10 @@
+# Payment Configuration - Never commit credentials!
+mpesa-config.php
+paystack-config.php
+
+# Logs containing transaction details
+*.log
+
+# Backup files
+*.bak
+*.backup

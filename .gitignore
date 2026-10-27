@@ -1,0 +1,97 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Payment configuration files (contain sensitive keys)
+payments/mpesa-config.php
+payments/paystack-config.php
+
+# Database dumps
+*.sql.gz
+*.sql.zip
+backup_*.sql
+
+# Logs
+config/storage/logs/*.log
+config/storage/logs/*.txt
+*.log
+
+# Cache
+config/storage/cache/*
+!config/storage/cache/.gitkeep
+
+# Uploaded files
+assets/images/products/*
+!assets/images/products/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Node modules (if using any build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Composer (if using any PHP packages)
+/vendor/
+composer.phar
+composer.lock
+
+# Build files
+/dist/
+/build/
+
+# Session files
+sessions/*
+!sessions/.gitkeep
+
+# Test files
+phpunit.xml
+.phpunit.result.cache
+tests/_output/*
+tests/_support/_generated
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Documentation builds
+/docs/_build/
+
+# Coverage reports
+coverage/
+.coverage
+htmlcov/
+
+# Security
+*.pem
+*.key
+*.cert
+*.crt
+
+# Local development
+local-config.php
+.htaccess.local
