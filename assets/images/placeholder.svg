@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-labelledby="title description">
+  <title id="title">Product image unavailable</title>
+  <desc id="description">A simple illustration of a hardware toolbox</desc>
+  <rect width="640" height="480" fill="#f1f5f9"/>
+  <path d="M225 190v-34c0-19 15-34 34-34h122c19 0 34 15 34 34v34h34c17 0 31 14 31 31v114c0 17-14 31-31 31H191c-17 0-31-14-31-31V221c0-17 14-31 31-31h34zm34 0h122v-34H259v34z" fill="#cbd5e1"/>
+  <path d="M160 246h320v38H160z" fill="#f97316"/>
+  <circle cx="320" cy="265" r="13" fill="#fff"/>
+  <text x="320" y="406" fill="#64748b" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">Product image coming soon</text>
+</svg>

@@ -62,6 +62,8 @@ Complete guide for using the admin and attendant dashboards.
    - **Product Image** (optional, max 5MB, JPG/PNG/GIF/WebP)
 4. Click **"Save Product"**
 
+Product image paths must be web-relative paths, not Windows filesystem paths. Uploading an image through the product form stores it under `assets/images/products/` and saves a relative path such as `assets/images/products/example.jpg`. The storefront also resolves valid in-project absolute paths for compatibility with older records and uses the placeholder when an image is missing.
+
 ### Edit Product
 
 1. Find product in products list

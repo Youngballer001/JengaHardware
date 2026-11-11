@@ -30,14 +30,22 @@ Complete M-Pesa integration for Jengo Hardware with STK Push, callbacks, and sec
 ```
 payments/
 ├── mpesa.php                  # Core M-Pesa API class
-├── mpesa-config.php           # Configuration (DO NOT COMMIT!)
+├── payment-config.php         # Loads private gateway settings from the root .env
+├── payment-env.php            # Reads environment variables and .env
 ├── mpesa-initiate.php         # STK Push initiation endpoint
 ├── mpesa-callback.php         # Callback handler from Safaricom
 ├── mpesa-status.php           # Payment status checker
 ├── mpesa-payment-page.php     # Payment UI page
+├── mpesa-manual-submit.php    # Records customer-submitted receipt for review
 ├── .gitignore                 # Protects sensitive files
 └── README.md                  # This file
 ```
+
+### Current project configuration
+
+Copy the root `.env.example` to `.env` and set your private Daraja and Paystack credentials there. Gateway code reads the root `.env` directly; do not commit `.env` or paste secrets into source files.
+
+The business mobile number `+254117721068` is provided for manual M-Pesa transfers. STK Push still requires the separate registered Daraja Paybill/Till shortcode, passkey, and a public HTTPS callback URL. Manual receipts remain pending until an administrator verifies them.
 
 ---
 
@@ -64,14 +72,17 @@ payments/
 4. Go to "APIs" tab → "Lipa Na M-Pesa Online"
 5. Copy **Passkey** from the test credentials section
 
-#### D. Update Configuration
-Open `mpesa-config.php` and update:
+#### D. Configure credentials
+Set these values in the root `.env` file:
 
-```php
-'consumer_key' => 'YOUR_CONSUMER_KEY_HERE',
-'consumer_secret' => 'YOUR_CONSUMER_SECRET_HERE',
-'shortcode' => '174379', // Sandbox test shortcode
-'passkey' => 'YOUR_PASSKEY_HERE',
+```env
+MPESA_ENVIRONMENT=sandbox
+MPESA_CONSUMER_KEY=your_consumer_key
+MPESA_CONSUMER_SECRET=your_consumer_secret
+MPESA_SHORTCODE=your_paybill_or_till_shortcode
+MPESA_PASSKEY=your_passkey
+MPESA_TRANSACTION_TYPE=CustomerPayBillOnline
+MPESA_BUSINESS_PHONE=+254117721068
 ```
 
 ### 2. Callback URL Setup
@@ -93,16 +104,16 @@ Open `mpesa-config.php` and update:
    ngrok http 80
    ```
 6. **Copy HTTPS URL** (e.g., `https://abcd1234.ngrok.io`)
-7. **Update callback URL** in `mpesa-config.php`:
-   ```php
-   'callback_url' => 'https://abcd1234.ngrok.io/payments/mpesa-callback.php'
+7. **Set callback URL** in `.env`:
+   ```env
+   MPESA_CALLBACK_URL=https://abcd1234.ngrok.io/payments/mpesa-callback.php
    ```
 
 #### Option B: Using Production Server
 
 If deploying to a live server:
-```php
-'callback_url' => 'https://yourdomain.com/payments/mpesa-callback.php'
+```env
+MPESA_CALLBACK_URL=https://yourdomain.com/payments/mpesa-callback.php
 ```
 
 **Requirements:**
@@ -190,7 +201,7 @@ function pollPaymentStatus(checkoutRequestId) {
 ### Direct API Usage (Backend)
 
 ```php
-require_once 'payments/mpesa-config.php';
+require_once 'payments/payment-config.php';
 require_once 'payments/mpesa.php';
 
 // Initialize
@@ -272,8 +283,8 @@ CREATE TABLE mpesa_transactions (
 
 ### 1. Protect Configuration
 ```bash
-# Add to .gitignore
-mpesa-config.php
+# Keep the root .env file out of version control
+.env
 *.log
 ```
 
@@ -314,7 +325,7 @@ $safe_data = $this->sanitizeLogData($data);
 ## 🐛 Troubleshooting
 
 ### Issue: "Invalid Access Token"
-**Solution**: Check consumer key and secret in `mpesa-config.php`
+**Solution**: Check `MPESA_CONSUMER_KEY` and `MPESA_CONSUMER_SECRET` in the root `.env` file.
 
 ### Issue: "Callback not received"
 **Solutions:**
@@ -373,19 +384,15 @@ Each log entry includes:
 5. Wait for approval (3-7 days typically)
 6. Receive production credentials
 
-### 2. Update Configuration
+### 2. Update `.env`
 
-```php
-define('MPESA_ENVIRONMENT', 'production');
-
-define('MPESA_CONFIG', [
-    'environment' => 'production',
-    'consumer_key' => 'YOUR_PRODUCTION_CONSUMER_KEY',
-    'consumer_secret' => 'YOUR_PRODUCTION_CONSUMER_SECRET',
-    'shortcode' => 'YOUR_PAYBILL_NUMBER',
-    'passkey' => 'YOUR_PRODUCTION_PASSKEY',
-    'callback_url' => 'https://yourdomain.com/payments/mpesa-callback.php',
-]);
+```env
+MPESA_ENVIRONMENT=production
+MPESA_CONSUMER_KEY=your_production_consumer_key
+MPESA_CONSUMER_SECRET=your_production_consumer_secret
+MPESA_SHORTCODE=your_registered_paybill_or_till_shortcode
+MPESA_PASSKEY=your_production_passkey
+MPESA_CALLBACK_URL=https://yourdomain.com/payments/mpesa-callback.php
 ```
 
 ### 3. Testing Checklist
@@ -475,7 +482,7 @@ AND created_at < NOW() - INTERVAL 5 MINUTE;
 
 ## ⚠️ Important Notes
 
-1. **Never commit `mpesa-config.php`** to version control
+1. **Never commit `.env`** to version control
 2. **Always use HTTPS** for production callbacks
 3. **Test thoroughly** in sandbox before production
 4. **Monitor logs** regularly for issues
@@ -499,7 +506,7 @@ Proprietary - Jengo Hardware © 2026
 - [ ] Install ngrok or setup production server
 - [ ] Create Safaricom developer account
 - [ ] Create app and get credentials
-- [ ] Update `mpesa-config.php` with credentials
+- [ ] Update `.env` with Daraja credentials and shortcode
 - [ ] Run database migrations
 - [ ] Start ngrok (if local): `ngrok http 80`
 - [ ] Update callback URL in config
@@ -541,7 +548,7 @@ Complete Paystack payment integration for card payments, mobile money, and bank 
 ```
 payments/
 ├── paystack.php                    # Core Paystack API class
-├── paystack-config.php             # Configuration (DO NOT COMMIT!)
+├── payment-config.php              # Loads private gateway settings from the root .env
 ├── paystack-initialize.php         # Transaction initialization
 ├── paystack-callback.php           # User return URL handler
 ├── paystack-webhook.php            # Webhook endpoint
@@ -564,13 +571,13 @@ payments/
 ### 2. Get API Keys
 
 1. Go to **Settings** → **API Keys & Webhooks**
-2. Copy **Test Secret Key** (sk_test_...)
-3. Copy **Test Public Key** (pk_test_...)
-4. Update `paystack-config.php`:
+2. Copy your Test or Live keys from the dashboard.
+3. Set them in the root `.env` file:
 
-```php
-'secret_key' => 'sk_test_YOUR_KEY_HERE',
-'public_key' => 'pk_test_YOUR_KEY_HERE',
+```env
+PAYSTACK_ENVIRONMENT=live
+PAYSTACK_SECRET_KEY=sk_live_your_secret_key
+PAYSTACK_PUBLIC_KEY=pk_live_your_public_key
 ```
 
 ### 3. Setup Webhook
@@ -899,7 +906,7 @@ Test all scenarios in test mode before going live.
 1. After approval, go to **Settings** → **API Keys**
 2. Switch to "Live" mode
 3. Copy live secret and public keys
-4. Update `paystack-config.php`:
+4. Update your Paystack keys in the root `.env` file:
 
 ```php
 define('PAYSTACK_ENVIRONMENT', 'live');

@@ -11,7 +11,7 @@ header('Content-Type: application/json');
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Response helper
 function jsonResponse($success, $message, $data = []) {
@@ -73,7 +73,7 @@ try {
     }
     
     // Load Paystack configuration
-    require_once __DIR__ . '/paystack-config.php';
+    require_once __DIR__ . '/payment-config.php';
     require_once __DIR__ . '/paystack.php';
     
     // Initialize Paystack API
@@ -90,7 +90,8 @@ try {
     ];
     
     // Prepare callback URL
-    $callback_url = PAYSTACK_CONFIG['callback_url'] . '?reference=' . urlencode($reference);
+    $callback_url = PAYSTACK_CONFIG['callback_url'];
+    $callback_url .= (strpos($callback_url, '?') === false ? '?' : '&') . 'reference=' . urlencode($reference);
     
     // Initialize transaction
     $result = $paystack->initializeTransaction(

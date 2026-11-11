@@ -167,6 +167,10 @@ class PaystackAPI {
      */
     public function initializeTransaction($amount, $email, $reference, $metadata = [], $callback_url = null) {
         try {
+            if ($this->secret_key === '' || stripos($this->secret_key, 'your_') !== false) {
+                return ['success' => false, 'message' => 'Paystack secret key is not configured.'];
+            }
+
             // Convert amount to smallest currency unit (kobo for NGN, cents for KES)
             // Paystack expects amount in kobo/cents
             $amount_in_cents = (int)($amount * 100);
@@ -252,6 +256,9 @@ class PaystackAPI {
         try {
             if (empty($reference)) {
                 return ['success' => false, 'message' => 'Reference is required'];
+            }
+            if ($this->secret_key === '' || stripos($this->secret_key, 'your_') !== false) {
+                return ['success' => false, 'message' => 'Paystack secret key is not configured.'];
             }
             
             // Make API request
@@ -514,29 +521,24 @@ class PaystackAPI {
      * Store transaction in database
      */
     private function storeTransaction($reference, $amount, $email, $access_code, $metadata) {
-        try {
-            $stmt = $this->pdo->prepare("
-                INSERT INTO paystack_transactions (
-                    reference, amount, email, access_code, 
-                    metadata, status, created_at
-                ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
-                ON DUPLICATE KEY UPDATE
-                    updated_at = NOW()
-            ");
-            
-            $stmt->execute([
-                $reference,
-                $amount,
-                $email,
-                $access_code,
-                json_encode($metadata)
-            ]);
-            
-            $this->log('Transaction Stored', ['reference' => $reference]);
-            
-        } catch (PDOException $e) {
-            $this->log('Database Error', ['error' => $e->getMessage()], 'ERROR');
-        }
+        $stmt = $this->pdo->prepare("
+            INSERT INTO paystack_transactions (
+                reference, amount, email, access_code,
+                metadata, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+            ON DUPLICATE KEY UPDATE
+                updated_at = NOW()
+        ");
+
+        $stmt->execute([
+            $reference,
+            $amount,
+            $email,
+            $access_code,
+            json_encode($metadata)
+        ]);
+
+        $this->log('Transaction Stored', ['reference' => $reference]);
     }
     
     /**

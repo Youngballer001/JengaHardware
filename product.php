@@ -5,12 +5,13 @@
  */
 
 session_start();
+require_once __DIR__ . '/includes/product-image.php';
 
 // Database configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -89,13 +90,8 @@ include 'includes/header.php';
         <div class="product-detail">
             <div class="product-images">
                 <div class="main-image">
-                    <?php if (!empty($product['image'])): ?>
-                        <img id="mainProductImage" src="uploads/products/<?php echo htmlspecialchars($product['image']); ?>" 
-                             alt="<?php echo htmlspecialchars($product['name']); ?>">
-                    <?php else: ?>
-                        <img id="mainProductImage" src="assets/images/placeholder.jpg" 
-                             alt="<?php echo htmlspecialchars($product['name']); ?>">
-                    <?php endif; ?>
+                    <img id="mainProductImage" src="<?php echo htmlspecialchars(productImageUrl($product['image'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                         alt="<?php echo htmlspecialchars($product['name']); ?>">
                 </div>
                 <!-- Add thumbnail gallery here if multiple images available -->
             </div>
@@ -193,13 +189,8 @@ include 'includes/header.php';
                     <?php foreach ($related_products as $related): ?>
                         <div class="product-card">
                             <a href="product.php?id=<?php echo $related['id']; ?>" class="product-image">
-                                <?php if (!empty($related['image'])): ?>
-                                    <img src="uploads/products/<?php echo htmlspecialchars($related['image']); ?>" 
-                                         alt="<?php echo htmlspecialchars($related['name']); ?>">
-                                <?php else: ?>
-                                    <img src="assets/images/placeholder.jpg" 
-                                         alt="<?php echo htmlspecialchars($related['name']); ?>">
-                                <?php endif; ?>
+                                <img src="<?php echo htmlspecialchars(productImageUrl($related['image'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                     alt="<?php echo htmlspecialchars($related['name']); ?>">
                             </a>
                             <div class="product-info">
                                 <div class="product-category">
@@ -249,15 +240,6 @@ function decreaseQuantity() {
     }
 }
 
-// Handle add to cart from detail page
-document.querySelector('.add-to-cart-detail')?.addEventListener('click', function() {
-    const quantity = parseInt(document.getElementById('quantity').value);
-    const productId = this.getAttribute('data-product-id');
-    const productName = this.getAttribute('data-product-name');
-    const productPrice = this.getAttribute('data-product-price');
-    
-    addToCart(productId, productName, productPrice, quantity);
-});
 </script>
 
 <?php include 'includes/footer.php'; ?>

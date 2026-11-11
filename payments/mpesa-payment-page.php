@@ -8,7 +8,7 @@ session_start();
 
 // Redirect if no order in session
 if (!isset($_SESSION['last_order'])) {
-    header("Location: shop.php");
+    header("Location: ../shop.php");
     exit();
 }
 
@@ -18,7 +18,7 @@ $order = $_SESSION['last_order'];
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     $pdo = new PDO(
@@ -44,6 +44,11 @@ try {
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
 }
+
+require_once __DIR__ . '/payment-config.php';
+require_once __DIR__ . '/mpesa.php';
+$mpesa_configuration_error = MpesaAPI::configurationError(MPESA_CONFIG);
+$mpesa_stk_available = $mpesa_configuration_error === null;
 
 // Generate CSRF token
 if (empty($_SESSION['csrf_token'])) {
@@ -75,6 +80,11 @@ include '../includes/header.php';
             </div>
 
             <div id="paymentForm" class="payment-form">
+                <?php if (!$mpesa_stk_available): ?>
+                    <div class="payment-info">
+                        <p><?php echo htmlspecialchars($mpesa_configuration_error); ?></p>
+                    </div>
+                <?php endif; ?>
                 <div class="form-group">
                     <label for="phone_number">M-Pesa Phone Number</label>
                     <input type="tel" id="phone_number" class="form-control" 
@@ -84,7 +94,7 @@ include '../includes/header.php';
                 </div>
 
                 <button id="initiatePayment" class="btn btn-primary btn-lg btn-block">
-                    Send Payment Request
+                    <?php echo $mpesa_stk_available ? 'Send Payment Request' : 'STK Push Unavailable'; ?>
                 </button>
 
                 <div class="payment-info">
@@ -98,6 +108,24 @@ include '../includes/header.php';
                 </div>
             </div>
 
+            <div class="manual-payment payment-info">
+                <h4>Pay manually by M-Pesa</h4>
+                <p>Send KSh <?php echo number_format($order_details['total_amount'], 2); ?> to
+                    <strong><?php echo htmlspecialchars(MPESA_CONFIG['business_phone']); ?></strong>.</p>
+                <p>Use order <strong><?php echo htmlspecialchars($order['order_number']); ?></strong> as your payment reference where available. Payment remains pending until the store verifies it.</p>
+                <form id="manualPaymentForm">
+                    <div class="form-group">
+                        <label for="mpesa_receipt">M-Pesa transaction code</label>
+                        <input type="text" id="mpesa_receipt" name="mpesa_receipt" class="form-control"
+                               maxlength="12" pattern="[A-Za-z0-9]{8,12}" required
+                               placeholder="e.g. QHX7ABC123">
+                    </div>
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                    <button type="submit" class="btn btn-outline">Submit receipt for verification</button>
+                </form>
+                <p id="manualPaymentMessage" role="status" aria-live="polite"></p>
+            </div>
+
             <div id="loadingStatus" class="loading-status" style="display: none;">
                 <div class="spinner"></div>
                 <p>Waiting for payment confirmation...</p>
@@ -105,7 +133,7 @@ include '../includes/header.php';
             </div>
 
             <div class="payment-footer">
-                <a href="order-confirmation.php?order=<?php echo urlencode($order['order_number']); ?>" 
+                <a href="../order-confirmation.php?order=<?php echo urlencode($order['order_number']); ?>"
                    class="btn btn-outline">View Order Details</a>
             </div>
         </div>
@@ -273,6 +301,7 @@ include '../includes/header.php';
 let checkoutRequestId = null;
 let statusCheckInterval = null;
 
+document.getElementById('initiatePayment').disabled = <?php echo $mpesa_stk_available ? 'false' : 'true'; ?>;
 document.getElementById('initiatePayment').addEventListener('click', function() {
     const phoneNumber = document.getElementById('phone_number').value.trim();
     
@@ -320,6 +349,34 @@ document.getElementById('initiatePayment').addEventListener('click', function() 
     });
 });
 
+document.getElementById('manualPaymentForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const form = this;
+    const button = form.querySelector('button[type="submit"]');
+    const message = document.getElementById('manualPaymentMessage');
+    const formData = new FormData(form);
+
+    button.disabled = true;
+    message.textContent = 'Submitting transaction code...';
+
+    fetch('mpesa-manual-submit.php', { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(data => {
+            message.textContent = data.message;
+            message.style.color = data.success ? '#22543d' : '#742a2a';
+            if (data.success) {
+                form.reset();
+            } else {
+                button.disabled = false;
+            }
+        })
+        .catch(() => {
+            message.textContent = 'Could not submit the transaction code. Please try again.';
+            message.style.color = '#742a2a';
+            button.disabled = false;
+        });
+});
+
 function startStatusCheck() {
     statusCheckInterval = setInterval(checkPaymentStatus, 3000);
     
@@ -347,7 +404,7 @@ function checkPaymentStatus() {
                     
                     // Redirect to confirmation page after 3 seconds
                     setTimeout(() => {
-                        window.location.href = 'order-confirmation.php?order=<?php echo urlencode($order['order_number']); ?>';
+                        window.location.href = '../order-confirmation.php?order=<?php echo urlencode($order['order_number']); ?>';
                     }, 3000);
                     
                 } else if (status === 'failed') {

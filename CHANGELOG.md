@@ -2,6 +2,16 @@
 
 All notable changes and features implemented in the Jengo Hardware e-commerce system.
 
+## [Unreleased]
+
+### Fixed
+- Verified live signup completes in under one second; added submit feedback to prevent duplicate clicks.
+- Reworked storefront, dashboard, checkout, and authentication styling around a bold charcoal-and-safety-orange palette.
+- Connected storefront cart actions to the backend routes and CSRF validation.
+- Routed M-Pesa and Paystack checkout orders into their payment flows, with Paystack failures returning to payment status for retry.
+- Corrected product image paths, added a shared product-image placeholder, and fixed profile update redirects.
+- Added live delivery-fee totals and shipping-address visibility to checkout.
+
 ## [1.1.0] - October 23, 2026
 
 ### 🎉 Major Features Added

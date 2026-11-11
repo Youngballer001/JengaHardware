@@ -10,7 +10,7 @@ session_start();
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     // Connect to database
@@ -34,7 +34,7 @@ try {
     }
     
     // Load Paystack configuration
-    require_once __DIR__ . '/paystack-config.php';
+    require_once __DIR__ . '/payment-config.php';
     require_once __DIR__ . '/paystack.php';
     
     // Initialize Paystack API
@@ -59,13 +59,23 @@ try {
     } else {
         // Payment failed
         $_SESSION['payment_error'] = $result['message'];
-        header("Location: ../checkout.php");
+        $order_number = $_SESSION['paystack_order_number'] ?? $_SESSION['last_order']['order_number'] ?? '';
+        if ($order_number !== '') {
+            header("Location: ../payment-status.php?order=" . urlencode($order_number));
+        } else {
+            header("Location: ../checkout.php");
+        }
         exit();
     }
     
 } catch (Exception $e) {
     error_log('Paystack Callback Error: ' . $e->getMessage());
     $_SESSION['payment_error'] = 'Payment verification failed';
-    header("Location: ../checkout.php");
+    $order_number = $_SESSION['paystack_order_number'] ?? $_SESSION['last_order']['order_number'] ?? '';
+    if ($order_number !== '') {
+        header("Location: ../payment-status.php?order=" . urlencode($order_number));
+    } else {
+        header("Location: ../checkout.php");
+    }
     exit();
 }

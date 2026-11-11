@@ -1,11 +1,20 @@
 # Environment files
-.env
-.env.local
-.env.production
+.env*
+!.env.example
+!.env.*.example
+*.env
+*.env.example
 
 # Payment configuration files (contain sensitive keys)
 payments/mpesa-config.php
 payments/paystack-config.php
+
+# Local secret files
+*.secret
+*.secrets
+*.credentials
+secrets.*
+credentials.*
 
 # Database dumps
 *.sql.gz

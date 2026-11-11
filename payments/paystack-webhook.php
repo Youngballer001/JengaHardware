@@ -15,7 +15,7 @@ header('Content-Type: application/json');
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     // Connect to database
@@ -42,7 +42,7 @@ try {
     }
     
     // Load Paystack configuration
-    require_once __DIR__ . '/paystack-config.php';
+    require_once __DIR__ . '/payment-config.php';
     require_once __DIR__ . '/paystack.php';
     
     // Initialize Paystack API

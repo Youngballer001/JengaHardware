@@ -6,17 +6,11 @@
 
 session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-    header("Location: auth.php?action=login");
-    exit();
-}
-
 // Database configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     $pdo = new PDO(
@@ -35,6 +29,8 @@ try {
 // Get order reference from URL
 $order_ref = $_GET['order'] ?? $_GET['reference'] ?? '';
 $payment_status = $_GET['status'] ?? '';
+$payment_error = $_SESSION['payment_error'] ?? '';
+unset($_SESSION['payment_error']);
 
 $order = null;
 $payment_info = null;
@@ -50,6 +46,16 @@ if ($order_ref) {
     $stmt->execute([$order_ref, $order_ref]);
     $order = $stmt->fetch();
     
+    if ($order) {
+        $is_owner = $order['user_id'] !== null
+            ? !empty($_SESSION['logged_in']) && (int)$_SESSION['user_id'] === (int)$order['user_id']
+            : isset($_SESSION['guest_email'])
+                && strcasecmp($_SESSION['guest_email'], $order['customer_email']) === 0;
+        if (!$is_owner) {
+            $order = null;
+        }
+    }
+
     if ($order) {
         // Get payment transaction details
         if ($order['payment_method'] === 'mpesa') {
@@ -138,6 +144,9 @@ include 'includes/header.php';
             <div class="status-card pending">
                 <div class="status-icon">⏳</div>
                 <h1>Payment Pending</h1>
+                <?php if ($payment_error): ?>
+                    <p class="alert alert-error"><?php echo htmlspecialchars($payment_error, ENT_QUOTES, 'UTF-8'); ?></p>
+                <?php endif; ?>
                 <p>We're waiting for your payment confirmation.</p>
                 
                 <?php if ($order['payment_method'] === 'mpesa'): ?>
@@ -184,7 +193,7 @@ include 'includes/header.php';
             <div class="status-card error">
                 <div class="status-icon">❌</div>
                 <h1>Payment Failed</h1>
-                <p>We couldn't process your payment. Please try again.</p>
+                <p><?php echo $payment_error ? htmlspecialchars($payment_error, ENT_QUOTES, 'UTF-8') : "We couldn't process your payment. Please try again."; ?></p>
                 
                 <?php if ($payment_info && isset($payment_info['gateway_response'])): ?>
                     <div class="error-details">
@@ -252,7 +261,7 @@ include 'includes/header.php';
 <style>
 .payment-status-page {
     padding: 60px 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(120deg, #202428 0 62%, #f97316 62% 100%);
     min-height: calc(100vh - 400px);
 }
 

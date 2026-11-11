@@ -16,7 +16,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['user
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     $pdo = new PDO(
@@ -229,8 +229,9 @@ include 'includes/header.php';
                     }
                     
                     if ($search) {
-                        $query .= " AND (o.order_number LIKE ? OR u.name LIKE ? OR o.customer_email LIKE ?)";
+                        $query .= " AND (o.order_number LIKE ? OR u.name LIKE ? OR o.customer_email LIKE ? OR o.payment_reference LIKE ?)";
                         $search_param = "%{$search}%";
+                        $params[] = $search_param;
                         $params[] = $search_param;
                         $params[] = $search_param;
                         $params[] = $search_param;
@@ -283,7 +284,12 @@ include 'includes/header.php';
                                         </td>
                                         <td><?php echo date('M j, Y', strtotime($order['created_at'])); ?></td>
                                         <td>KSh <?php echo number_format($order['total_amount'], 2); ?></td>
-                                        <td><span class="payment-badge payment-<?php echo $order['payment_status']; ?>"><?php echo ucfirst($order['payment_status']); ?></span></td>
+                                        <td>
+                                            <span class="payment-badge payment-<?php echo $order['payment_status']; ?>"><?php echo ucfirst($order['payment_status']); ?></span>
+                                            <?php if (!empty($order['payment_reference'])): ?>
+                                                <br><small>Ref: <?php echo htmlspecialchars($order['payment_reference']); ?></small>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?php echo ucfirst($order['delivery_method']); ?></td>
                                         <td><span class="status-badge status-<?php echo $order['status']; ?>"><?php echo ucfirst($order['status']); ?></span></td>
                                         <td>
@@ -598,7 +604,7 @@ include 'includes/header.php';
 }
 
 .admin-badge {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #292e33, #f97316);
     color: white;
     padding: 4px 12px;
     border-radius: 12px;
@@ -744,7 +750,7 @@ include 'includes/header.php';
     background: #f7fafc;
     padding: 25px;
     border-radius: 8px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #f97316;
 }
 
 .report-card h3 {

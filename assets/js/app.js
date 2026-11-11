@@ -6,6 +6,10 @@
 // Toast notification function
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
+    if (!container) {
+        return;
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
@@ -24,33 +28,45 @@ function showToast(message, type = 'success') {
 
 // Update cart count in header
 function updateCartCount() {
-    fetch('cart.php?action=count')
+    const actionsUrl = document.querySelector('meta[name="actions-url"]')?.content || 'actions.php';
+    fetch(`${actionsUrl}?action=get_cart_count`)
         .then(response => response.json())
         .then(data => {
             const cartCountElement = document.getElementById('cartCount');
-            if (cartCountElement && data.count !== undefined) {
-                cartCountElement.textContent = data.count;
+            if (cartCountElement && data.data && data.data.count !== undefined) {
+                cartCountElement.textContent = data.data.count;
             }
         })
         .catch(error => console.error('Error updating cart count:', error));
 }
 
-// Add to cart function
-function addToCart(productId, productName, productPrice, quantity = 1) {
+function postCartAction(action, productId, quantity) {
+    const actionsUrl = document.querySelector('meta[name="actions-url"]')?.content || 'actions.php';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const formData = new FormData();
-    formData.append('action', 'add');
-    formData.append('product_id', productId);
-    formData.append('quantity', quantity);
-    
-    fetch('actions.php', {
+    formData.append('action', action);
+    formData.append('csrf_token', csrfToken);
+    if (productId !== undefined) formData.append('product_id', productId);
+    if (quantity !== undefined) formData.append('quantity', quantity);
+
+    return fetch(actionsUrl, {
         method: 'POST',
         body: formData
-    })
-    .then(response => response.json())
+    }).then(response => response.json());
+}
+
+// Add to cart function
+function addToCart(productId, productName, productPrice, quantity = 1) {
+    postCartAction('add_to_cart', productId, quantity)
     .then(data => {
         if (data.success) {
             showToast(`${productName} added to cart!`, 'success');
-            updateCartCount();
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement && data.data && data.data.cart_count !== undefined) {
+                cartCountElement.textContent = data.data.cart_count;
+            } else {
+                updateCartCount();
+            }
         } else {
             showToast(data.message || 'Failed to add item to cart', 'error');
         }
@@ -70,16 +86,7 @@ function updateCartQuantity(productId, quantity) {
         return;
     }
     
-    const formData = new FormData();
-    formData.append('action', 'update');
-    formData.append('product_id', productId);
-    formData.append('quantity', quantity);
-    
-    fetch('actions.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
+    postCartAction('update_cart', productId, quantity)
     .then(data => {
         if (data.success) {
             location.reload(); // Reload to update totals
@@ -95,15 +102,7 @@ function updateCartQuantity(productId, quantity) {
 
 // Remove from cart
 function removeFromCart(productId) {
-    const formData = new FormData();
-    formData.append('action', 'remove');
-    formData.append('product_id', productId);
-    
-    fetch('actions.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
+    postCartAction('remove_from_cart', productId)
     .then(data => {
         if (data.success) {
             showToast('Item removed from cart', 'success');
@@ -124,14 +123,7 @@ function clearCart() {
         return;
     }
     
-    const formData = new FormData();
-    formData.append('action', 'clear');
-    
-    fetch('actions.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
+    postCartAction('clear_cart')
     .then(data => {
         if (data.success) {
             showToast('Cart cleared', 'success');
@@ -154,6 +146,18 @@ function toggleMobileMenu() {
 
 // Close mobile menu when clicking outside
 document.addEventListener('click', function(event) {
+    const toggleButton = event.target.closest('[data-password-toggle]');
+    if (toggleButton) {
+        const passwordInput = document.getElementById(toggleButton.dataset.passwordToggle);
+        if (passwordInput) {
+            const showPassword = passwordInput.type === 'password';
+            passwordInput.type = showPassword ? 'text' : 'password';
+            toggleButton.textContent = showPassword ? 'Hide' : 'Show';
+            toggleButton.setAttribute('aria-pressed', showPassword ? 'true' : 'false');
+            toggleButton.setAttribute('aria-label', `${showPassword ? 'Hide' : 'Show'} ${passwordInput.labels[0]?.textContent || 'password'}`);
+        }
+    }
+
     const nav = document.getElementById('mainNav');
     const menuBtn = document.querySelector('.mobile-menu-btn');
     
@@ -166,15 +170,58 @@ document.addEventListener('click', function(event) {
 document.addEventListener('DOMContentLoaded', function() {
     
     // Add to cart buttons
-    document.querySelectorAll('.add-to-cart').forEach(button => {
+    document.querySelectorAll('.add-to-cart, .add-to-cart-detail').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const productId = this.getAttribute('data-product-id');
             const productName = this.getAttribute('data-product-name');
             const productPrice = this.getAttribute('data-product-price');
-            addToCart(productId, productName, productPrice);
+            const quantityInput = document.getElementById('quantity');
+            const quantity = this.classList.contains('add-to-cart-detail') && quantityInput
+                ? parseInt(quantityInput.value, 10) || 1
+                : 1;
+            addToCart(productId, productName, productPrice, quantity);
         });
     });
+
+    // Keep checkout delivery totals and address requirements in sync.
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        const subtotal = parseFloat(checkoutForm.dataset.subtotal) || 0;
+        const addressSection = document.getElementById('shippingAddressSection');
+        const pickupSection = document.getElementById('pickupInfoSection');
+        const deliveryAmount = document.getElementById('deliveryAmount');
+        const totalAmount = document.getElementById('totalAmount');
+        const finalTotal = document.getElementById('finalTotal');
+        const currency = amount => `KSh ${amount.toLocaleString('en-KE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+
+        const updateDelivery = () => {
+            const selected = checkoutForm.querySelector('input[name="delivery_method"]:checked');
+            const fee = selected ? parseFloat(selected.dataset.price) || 0 : 0;
+            const needsAddress = selected && selected.value !== 'pickup';
+
+            if (addressSection) addressSection.style.display = needsAddress ? 'block' : 'none';
+            if (pickupSection) pickupSection.style.display = needsAddress ? 'none' : 'block';
+            ['address_line1', 'city'].forEach(name => {
+                const field = checkoutForm.elements.namedItem(name);
+                if (field) field.required = Boolean(needsAddress);
+            });
+            if (deliveryAmount) deliveryAmount.textContent = fee ? currency(fee) : 'FREE';
+            if (totalAmount) totalAmount.textContent = currency(subtotal + fee);
+            if (finalTotal) finalTotal.textContent = (subtotal + fee).toLocaleString('en-KE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        };
+
+        checkoutForm.querySelectorAll('input[name="delivery_method"]').forEach(input => {
+            input.addEventListener('change', updateDelivery);
+        });
+        updateDelivery();
+    }
     
     // Quantity input validation
     document.querySelectorAll('.qty-input').forEach(input => {

@@ -10,7 +10,7 @@ session_start();
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -45,7 +45,16 @@ $stmt = $pdo->prepare("
 $stmt->execute([$order_number]);
 $order = $stmt->fetch();
 
-if (!$order) {
+if ($order) {
+    $is_owner = $order['user_id'] !== null
+        ? !empty($_SESSION['logged_in']) && (int)$_SESSION['user_id'] === (int)$order['user_id']
+        : isset($_SESSION['guest_email'])
+            && strcasecmp($_SESSION['guest_email'], $order['customer_email']) === 0;
+} else {
+    $is_owner = false;
+}
+
+if (!$order || !$is_owner) {
     header("Location: index.php");
     exit();
 }
@@ -381,7 +390,7 @@ include 'includes/header.php';
 
 .total-row td {
     font-size: 18px;
-    color: #667eea;
+    color: #f97316;
     border-top: 2px solid #e2e8f0;
     padding-top: 15px;
 }
@@ -437,7 +446,7 @@ include 'includes/header.php';
 .step-number {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #292e33, #f97316);
     color: white;
     border-radius: 50%;
     display: flex;

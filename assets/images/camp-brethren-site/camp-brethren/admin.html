@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Staff dashboard | Elite Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Questrial&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/admin.css">
+  <script src="assets/admin.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Elite Academy <span>Staff</span></a>
+    <button id="logout-button" class="button button-secondary" type="button" hidden>Sign out</button>
+  </header>
+  <main class="page">
+    <section id="login-panel" class="panel login-panel">
+      <h1>Staff sign in</h1>
+      <p>Sign in to review admission and contact enquiries.</p>
+      <form id="login-form">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" required>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button id="login-button" class="button" type="submit">Sign in</button>
+      </form>
+      <p id="setup-note" class="notice" hidden>Staff sign-in is not configured yet. Set ADMIN_USERNAME and a strong ADMIN_PASSWORD on the server.</p>
+      <p id="login-status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="dashboard-panel" hidden>
+      <div class="dashboard-heading">
+        <div>
+          <h1>Enquiries</h1>
+          <p>Only authorized staff can view this information.</p>
+        </div>
+        <button id="refresh-button" class="button button-secondary" type="button">Refresh</button>
+      </div>
+      <p id="email-status" class="notice" hidden>Email notifications are not configured. Enquiries are still saved here.</p>
+      <p id="dashboard-status" class="status" role="status" aria-live="polite"></p>
+      <div class="panel table-panel">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th scope="col">Received</th><th scope="col">Type</th><th scope="col">Name</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col">Class</th><th scope="col">Message</th><th scope="col">Email alert</th><th scope="col">Reference</th></tr>
+            </thead>
+            <tbody id="inquiries-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span id="page-summary">No enquiries</span>
+          <div>
+            <button id="previous-button" class="button button-secondary" type="button" disabled>Previous</button>
+            <button id="next-button" class="button button-secondary" type="button" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

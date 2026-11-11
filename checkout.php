@@ -5,12 +5,13 @@
  */
 
 session_start();
+require_once __DIR__ . '/includes/product-image.php';
 
 // Database configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -129,7 +130,8 @@ include 'includes/header.php';
         <div class="checkout-layout">
             <!-- Order Form -->
             <div class="checkout-form-section">
-                <form action="actions.php" method="POST" id="checkoutForm" class="checkout-form">
+                <form action="actions.php" method="POST" id="checkoutForm" class="checkout-form"
+                      data-subtotal="<?php echo number_format($subtotal, 2, '.', ''); ?>">
                     <input type="hidden" name="action" value="create_order">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                     
@@ -248,7 +250,7 @@ include 'includes/header.php';
                             </label>
                             
                             <label class="payment-option">
-                                <input type="radio" name="payment_method" value="card">
+                                <input type="radio" name="payment_method" value="paystack">
                                 <div class="payment-option-content">
                                     <strong>Credit/Debit Card</strong>
                                     <p>Pay with Visa, Mastercard</p>
@@ -297,13 +299,8 @@ include 'includes/header.php';
                     <?php foreach ($validated_cart as $item): ?>
                         <div class="summary-item">
                             <div class="summary-item-image">
-                                <?php if (!empty($item['image'])): ?>
-                                    <img src="uploads/products/<?php echo htmlspecialchars($item['image']); ?>" 
-                                         alt="<?php echo htmlspecialchars($item['name']); ?>">
-                                <?php else: ?>
-                                    <img src="assets/images/placeholder.jpg" 
-                                         alt="<?php echo htmlspecialchars($item['name']); ?>">
-                                <?php endif; ?>
+                                <img src="<?php echo htmlspecialchars(productImageUrl($item['image'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                     alt="<?php echo htmlspecialchars($item['name']); ?>">
                             </div>
                             <div class="summary-item-details">
                                 <div class="summary-item-name">
@@ -410,7 +407,7 @@ include 'includes/header.php';
 
 .delivery-option:has(input:checked),
 .payment-option:has(input:checked) {
-    border-color: #667eea;
+    border-color: #f97316;
     background: #f7fafc;
 }
 
@@ -434,7 +431,7 @@ include 'includes/header.php';
 
 .delivery-price {
     font-weight: 600;
-    color: #667eea;
+    color: #f97316;
 }
 
 .delivery-description,
@@ -534,7 +531,7 @@ include 'includes/header.php';
 
 .summary-item-total {
     font-weight: 600;
-    color: #667eea;
+    color: #f97316;
 }
 
 .summary-calculations {

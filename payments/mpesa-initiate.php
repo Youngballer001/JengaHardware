@@ -11,7 +11,7 @@ header('Content-Type: application/json');
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Response helper
 function jsonResponse($success, $message, $data = []) {
@@ -73,11 +73,15 @@ try {
     }
     
     // Load M-Pesa configuration
-    require_once __DIR__ . '/mpesa-config.php';
+    require_once __DIR__ . '/payment-config.php';
     require_once __DIR__ . '/mpesa.php';
     
     // Initialize M-Pesa API
     $mpesa = new MpesaAPI($pdo, MPESA_CONFIG);
+    $configuration_error = MpesaAPI::configurationError(MPESA_CONFIG);
+    if ($configuration_error !== null) {
+        jsonResponse(false, $configuration_error);
+    }
     
     // Prepare STK Push parameters
     $amount = (int)ceil($order['total_amount']); // M-Pesa doesn't accept decimals

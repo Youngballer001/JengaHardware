@@ -5,12 +5,13 @@
  */
 
 session_start();
+require_once __DIR__ . '/includes/product-image.php';
 
 // Database configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -68,13 +69,8 @@ include 'includes/header.php';
                             <div class="cart-item" data-product-id="<?php echo $item['id']; ?>">
                                 <div class="cart-item-image">
                                     <a href="product.php?id=<?php echo $item['id']; ?>">
-                                        <?php if (!empty($item['image'])): ?>
-                                            <img src="uploads/products/<?php echo htmlspecialchars($item['image']); ?>" 
-                                                 alt="<?php echo htmlspecialchars($item['name']); ?>">
-                                        <?php else: ?>
-                                            <img src="assets/images/placeholder.jpg" 
-                                                 alt="<?php echo htmlspecialchars($item['name']); ?>">
-                                        <?php endif; ?>
+                                        <img src="<?php echo htmlspecialchars(productImageUrl($item['image'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                             alt="<?php echo htmlspecialchars($item['name']); ?>">
                                     </a>
                                 </div>
 

@@ -16,7 +16,7 @@ if (isset($_SERVER['HTTP_HOST']) &&
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 $success_message = '';
 $error_message = '';
@@ -88,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Change Admin Password - Jengo Hardware</title>
+    <link rel="stylesheet" href="../assets/css/style.css?v=1.2.0">
     <style>
         * {
             margin: 0;
@@ -97,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(120deg, #202428 0 62%, #f97316 62% 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -175,9 +176,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #f97316;
         }
-        
+
+        .password-field input {
+            padding-right: 76px;
+        }
+
         .password-requirements {
             font-size: 12px;
             color: #718096;
@@ -192,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f97316;
             color: white;
             border: none;
             border-radius: 8px;
@@ -325,8 +330,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="form-group">
                     <label for="new_password">New Password</label>
-                    <input type="password" id="new_password" name="new_password" required
-                           placeholder="Enter new secure password">
+                    <div class="password-field">
+                        <input type="password" id="new_password" name="new_password" autocomplete="new-password" required
+                               placeholder="Enter new secure password">
+                        <button type="button" class="password-toggle" data-password-toggle="new_password"
+                                aria-controls="new_password" aria-pressed="false">Show</button>
+                    </div>
                     <div class="password-requirements">
                         Password must contain:
                         <ul>
@@ -341,8 +350,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="form-group">
                     <label for="confirm_password">Confirm New Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required
-                           placeholder="Re-enter new password">
+                    <div class="password-field">
+                        <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required
+                               placeholder="Re-enter new password">
+                        <button type="button" class="password-toggle" data-password-toggle="confirm_password"
+                                aria-controls="confirm_password" aria-pressed="false">Show</button>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn">Change Password</button>
@@ -353,5 +366,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
     </div>
+    <script src="../assets/js/app.js?v=1.2.0"></script>
 </body>
 </html>

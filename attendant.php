@@ -16,7 +16,7 @@ if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in'] || $_SESSION['user
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     $pdo = new PDO(
@@ -392,9 +392,9 @@ include 'includes/header.php';
 
 .tab-btn:hover,
 .tab-btn.active {
-    background: #667eea;
+    background: #f97316;
     color: white;
-    border-color: #667eea;
+    border-color: #f97316;
 }
 
 .stats-grid {

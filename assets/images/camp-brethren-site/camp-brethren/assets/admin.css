@@ -1,0 +1,34 @@
+:root{color-scheme:light;--ink:#0D3249;--mut:#4A6578;--line:#CFE6F2;--sky-l:#E8F6FD;--green:#1D7A3A;--red:#9e2a2b;--shadow:0 12px 32px rgba(13,50,73,.1)}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f9fc;color:var(--ink);font:16px/1.6 'Questrial',sans-serif}
+h1{margin:0 0 .5rem;font:800 clamp(1.6rem,4vw,2.2rem)/1.2 'Montserrat',sans-serif}
+p{margin:.25rem 0 1rem;color:var(--mut)}
+.topbar{height:68px;padding:0 max(1.25rem,calc((100vw - 1440px)/2));display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid var(--line)}
+.brand{color:var(--ink);font:800 1.1rem 'Montserrat',sans-serif;text-decoration:none}
+.brand span{margin-left:.35rem;color:var(--green);font-size:.8rem}
+.page{max-width:1480px;margin:2.5rem auto;padding:0 1.25rem}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.login-panel{max-width:480px;margin:5vh auto;padding:2rem}
+.login-panel form{display:grid;gap:.6rem}
+label{margin-top:.5rem;font-weight:700}
+input{min-height:44px;padding:.6rem .75rem;border:1px solid #9cb8c9;border-radius:8px;font:inherit}
+input:focus-visible,button:focus-visible{outline:3px solid #2FA4E0;outline-offset:2px}
+.button{min-height:42px;padding:.55rem 1rem;border:1px solid var(--green);border-radius:8px;background:var(--green);color:#fff;font:700 .9rem 'Montserrat',sans-serif;cursor:pointer}
+.login-panel .button{margin-top:.5rem}
+.button-secondary{background:#fff;color:var(--ink);border-color:var(--line)}
+.button:disabled{opacity:.55;cursor:not-allowed}
+.dashboard-heading,.pagination{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.table-panel{overflow:hidden}
+.table-scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:left}
+th,td{padding:.8rem .9rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{position:sticky;top:0;background:var(--sky-l);font:700 .78rem 'Montserrat',sans-serif;white-space:nowrap}
+td{min-width:100px;max-width:300px;overflow-wrap:anywhere}
+td:last-child{font-family:monospace;font-size:.75rem;min-width:220px}
+.pagination{padding:1rem}
+.pagination>div{display:flex;gap:.5rem}
+.notice,.status{padding:.75rem 1rem;border-radius:8px;background:var(--sky-l)}
+.status:empty{display:none}
+.status.error{background:#fff0f0;color:var(--red)}
+[hidden]{display:none!important}
+@media(max-width:700px){.page{margin:1.5rem auto}.dashboard-heading{align-items:flex-start}.pagination{align-items:flex-start;flex-direction:column}.table-panel{margin:0 -0.5rem}}

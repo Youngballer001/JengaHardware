@@ -1,3 +1,4 @@
+<?php $root_prefix = basename(dirname($_SERVER['SCRIPT_NAME'])) === 'payments' ? '../' : ''; ?>
     </main>
 
     <footer class="main-footer">
@@ -12,10 +13,10 @@
                     <div class="footer-section">
                         <h3>Quick Links</h3>
                         <ul class="footer-links">
-                            <li><a href="index.php">Home</a></li>
-                            <li><a href="shop.php">Shop</a></li>
-                            <li><a href="cart.php">Cart</a></li>
-                            <li><a href="auth.php">Account</a></li>
+                            <li><a href="<?php echo $root_prefix; ?>index.php">Home</a></li>
+                            <li><a href="<?php echo $root_prefix; ?>shop.php">Shop</a></li>
+                            <li><a href="<?php echo $root_prefix; ?>cart.php">Cart</a></li>
+                            <li><a href="<?php echo $root_prefix; ?>auth.php">Account</a></li>
                         </ul>
                     </div>
 
@@ -27,7 +28,7 @@
                                 $stmt = $pdo->query("SELECT * FROM categories WHERE status = 'active' ORDER BY name LIMIT 5");
                                 $footer_categories = $stmt->fetchAll();
                                 foreach ($footer_categories as $cat) {
-                                    echo '<li><a href="shop.php?category=' . $cat['id'] . '">' . htmlspecialchars($cat['name']) . '</a></li>';
+                                    echo '<li><a href="' . $root_prefix . 'shop.php?category=' . (int)$cat['id'] . '">' . htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8') . '</a></li>';
                                 }
                             }
                             ?>
@@ -60,6 +61,6 @@
     <!-- Toast notification container -->
     <div id="toast-container"></div>
 
-    <script src="assets/js/app.js"></script>
+    <script src="<?php echo $root_prefix; ?>assets/js/app.js"></script>
 </body>
 </html>

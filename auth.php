@@ -10,7 +10,7 @@ session_start();
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -263,6 +263,7 @@ $csrf_token = generateCSRFToken();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $action === 'register' ? 'Register' : 'Login'; ?> - Jengo Hardware</title>
+    <link rel="stylesheet" href="assets/css/style.css?v=1.2.0">
     <style>
         * {
             margin: 0;
@@ -272,7 +273,7 @@ $csrf_token = generateCSRFToken();
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(115deg, #202428 0 78%, #f97316 78% 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -290,7 +291,7 @@ $csrf_token = generateCSRFToken();
         }
         
         .auth-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(115deg, #202428 0 78%, #f97316 78% 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -358,7 +359,7 @@ $csrf_token = generateCSRFToken();
         
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #f97316;
         }
         
         .password-requirements {
@@ -379,7 +380,7 @@ $csrf_token = generateCSRFToken();
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f97316;
             color: white;
         }
         
@@ -396,7 +397,7 @@ $csrf_token = generateCSRFToken();
         }
         
         .auth-footer a {
-            color: #667eea;
+            color: #f97316;
             text-decoration: none;
             font-weight: 600;
         }
@@ -423,8 +424,123 @@ $csrf_token = generateCSRFToken();
         }
         
         .tab.active {
-            background: #667eea;
+            background: #f97316;
             color: white;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                linear-gradient(120deg, rgba(26, 29, 32, 0.98) 0 62%, rgba(249, 115, 22, 0.95) 62% 100%);
+            color: #24282c;
+        }
+
+        .auth-container {
+            max-width: 480px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        .auth-header {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(115deg, #202428 0%, #30363c 78%, #f97316 78%, #f97316 100%);
+            padding: 34px 30px;
+            text-align: left;
+        }
+
+        .auth-header h1 {
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: -0.7px;
+            text-transform: uppercase;
+        }
+
+        .auth-header p {
+            color: #f5f5f4;
+            font-size: 15px;
+        }
+
+        .auth-body {
+            padding: 30px;
+        }
+
+        .form-group label {
+            color: #30353a;
+            font-weight: 700;
+        }
+
+        .form-group input {
+            border: 1px solid #d3d6d8;
+            border-radius: 6px;
+            padding: 13px 14px;
+        }
+
+        .form-group input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+        }
+
+        .password-field input {
+            padding-right: 76px;
+        }
+
+        .btn-primary {
+            background: #f97316;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .btn-primary:hover {
+            background: #ea580c;
+        }
+
+        .tab.active {
+            background: #292e33;
+            box-shadow: inset 0 -3px #f97316;
+        }
+
+        .auth-footer a {
+            color: #ea580c;
+        }
+
+        .password-requirements {
+            line-height: 1.5;
+        }
+
+        .alert-error {
+            background: #fff1ee;
+            color: #9c2f1e;
+            border-color: #f2b4a8;
+        }
+
+        .alert-success {
+            background: #edf8ef;
+            color: #22623a;
+            border-color: #b7dfc0;
+        }
+
+        .alert-info {
+            background: #fff7ed;
+            color: #9a4a0b;
+            border-color: #fed7aa;
+        }
+
+        .btn:disabled {
+            cursor: wait;
+            opacity: 0.75;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 14px;
+            }
+
+            .auth-body {
+                padding: 24px 20px;
+            }
         }
     </style>
 </head>
@@ -463,7 +579,7 @@ $csrf_token = generateCSRFToken();
             
             <?php if ($action === 'register'): ?>
                 <!-- Registration Form -->
-                <form method="POST" action="auth.php?action=register">
+                <form method="POST" action="auth.php?action=register" id="registrationForm">
                     <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                     <input type="hidden" name="action" value="register">
                     
@@ -490,7 +606,11 @@ $csrf_token = generateCSRFToken();
                     
                     <div class="form-group">
                         <label for="password">Password *</label>
-                        <input type="password" id="password" name="password" required>
+                        <div class="password-field">
+                            <input type="password" id="password" name="password" autocomplete="new-password" required>
+                            <button type="button" class="password-toggle" data-password-toggle="password"
+                                    aria-controls="password" aria-pressed="false">Show</button>
+                        </div>
                         <div class="password-requirements">
                             Must be at least 8 characters with uppercase, lowercase, and number
                         </div>
@@ -498,10 +618,14 @@ $csrf_token = generateCSRFToken();
                     
                     <div class="form-group">
                         <label for="confirm_password">Confirm Password *</label>
-                        <input type="password" id="confirm_password" name="confirm_password" required>
+                        <div class="password-field">
+                            <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
+                            <button type="button" class="password-toggle" data-password-toggle="confirm_password"
+                                    aria-controls="confirm_password" aria-pressed="false">Show</button>
+                        </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">Create Account</button>
+                    <button type="submit" class="btn btn-primary" id="registrationSubmit">Create Account</button>
                 </form>
                 
             <?php else: ?>
@@ -519,7 +643,11 @@ $csrf_token = generateCSRFToken();
                     
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
+                        <div class="password-field">
+                            <input type="password" id="password" name="password" autocomplete="current-password" required>
+                            <button type="button" class="password-toggle" data-password-toggle="password"
+                                    aria-controls="password" aria-pressed="false">Show</button>
+                        </div>
                     </div>
                     
                     <button type="submit" class="btn btn-primary">Login</button>
@@ -535,5 +663,18 @@ $csrf_token = generateCSRFToken();
             </div>
         </div>
     </div>
+    <script src="assets/js/app.js?v=1.2.0"></script>
+    <script>
+        const registrationForm = document.getElementById('registrationForm');
+        if (registrationForm) {
+            registrationForm.addEventListener('submit', function () {
+                const submitButton = document.getElementById('registrationSubmit');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Creating account...';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

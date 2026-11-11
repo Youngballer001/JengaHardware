@@ -18,7 +18,7 @@ $order = $_SESSION['last_order'];
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     $pdo = new PDO(
@@ -42,7 +42,7 @@ try {
     }
     
     // Load Paystack config to get public key
-    require_once 'paystack-config.php';
+    require_once __DIR__ . '/payment-config.php';
     $public_key = PAYSTACK_CONFIG['public_key'];
     
 } catch (PDOException $e) {

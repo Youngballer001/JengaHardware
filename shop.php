@@ -5,12 +5,13 @@
  */
 
 session_start();
+require_once __DIR__ . '/includes/product-image.php';
 
 // Database configuration
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -203,13 +204,8 @@ include 'includes/header.php';
                         <?php foreach ($products as $product): ?>
                             <div class="product-card">
                                 <a href="product.php?id=<?php echo $product['id']; ?>" class="product-image">
-                                    <?php if (!empty($product['image'])): ?>
-                                        <img src="uploads/products/<?php echo htmlspecialchars($product['image']); ?>" 
-                                             alt="<?php echo htmlspecialchars($product['name']); ?>">
-                                    <?php else: ?>
-                                        <img src="assets/images/placeholder.jpg" 
-                                             alt="<?php echo htmlspecialchars($product['name']); ?>">
-                                    <?php endif; ?>
+                                    <img src="<?php echo htmlspecialchars(productImageUrl($product['image'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                         alt="<?php echo htmlspecialchars($product['name']); ?>">
                                     <?php if ($product['stock'] == 0): ?>
                                         <span class="badge badge-danger">Out of Stock</span>
                                     <?php elseif ($product['stock'] < 10): ?>

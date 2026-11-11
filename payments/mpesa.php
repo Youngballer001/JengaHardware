@@ -21,6 +21,7 @@ class MpesaAPI {
     private $consumer_secret;
     private $passkey;
     private $shortcode;
+    private $transaction_type;
     private $initiator_name;
     private $security_credential;
     
@@ -49,6 +50,7 @@ class MpesaAPI {
         $this->consumer_secret = $config['consumer_secret'] ?? '';
         $this->passkey = $config['passkey'] ?? '';
         $this->shortcode = $config['shortcode'] ?? '';
+        $this->transaction_type = $config['transaction_type'] ?? 'CustomerPayBillOnline';
         $this->initiator_name = $config['initiator_name'] ?? '';
         $this->security_credential = $config['security_credential'] ?? '';
         
@@ -71,6 +73,46 @@ class MpesaAPI {
         if (!is_dir($log_dir)) {
             mkdir($log_dir, 0755, true);
         }
+    }
+
+    public static function configurationError($config) {
+        if (!in_array($config['environment'] ?? '', ['sandbox', 'production'], true)) {
+            return 'M-Pesa environment must be set to sandbox or production.';
+        }
+
+        $credential_names = [
+            'consumer_key' => 'MPESA_CONSUMER_KEY',
+            'consumer_secret' => 'MPESA_CONSUMER_SECRET',
+            'passkey' => 'MPESA_PASSKEY'
+        ];
+        foreach ($credential_names as $key => $environment_name) {
+            $value = trim($config[$key] ?? '');
+            if ($value === '' || stripos($value, 'your_') !== false || stripos($value, 'placeholder') !== false) {
+                return 'Set ' . $environment_name . ' in the root .env file. Do not put credentials in .env.example.';
+            }
+        }
+
+        $shortcode = (string)($config['shortcode'] ?? '');
+        if (!preg_match('/^[0-9]{5,10}$/', $shortcode)) {
+            return 'Configure the official M-Pesa Paybill or Till shortcode; a phone number cannot be used for STK Push.';
+        }
+
+        if (!in_array($config['transaction_type'] ?? '', ['CustomerPayBillOnline', 'CustomerBuyGoodsOnline'], true)) {
+            return 'Configure the M-Pesa transaction type for your Paybill or Till.';
+        }
+
+        $callback_url = $config['callback_url'] ?? '';
+        $callback = is_string($callback_url) ? parse_url($callback_url) : false;
+        if (
+            !filter_var($callback_url, FILTER_VALIDATE_URL) ||
+            $callback === false ||
+            strtolower($callback['scheme'] ?? '') !== 'https' ||
+            in_array(strtolower($callback['host'] ?? ''), ['localhost', '127.0.0.1', '::1'], true)
+        ) {
+            return 'Configure a public HTTPS M-Pesa callback URL before enabling STK Push.';
+        }
+
+        return null;
     }
     
     /**
@@ -125,6 +167,10 @@ class MpesaAPI {
      */
     public function getAccessToken() {
         try {
+            if (trim($this->consumer_key) === '' || trim($this->consumer_secret) === '') {
+                return ['success' => false, 'message' => 'M-Pesa Daraja credentials are not configured.'];
+            }
+
             $credentials = base64_encode($this->consumer_key . ':' . $this->consumer_secret);
             
             $ch = curl_init($this->oauth_url);
@@ -133,7 +179,8 @@ class MpesaAPI {
                 'Content-Type: application/json'
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             
             $response = curl_exec($ch);
@@ -148,7 +195,7 @@ class MpesaAPI {
             
             $result = json_decode($response, true);
             
-            if ($http_code === 200 && isset($result['access_token'])) {
+            if ($http_code === 200 && is_array($result) && !empty($result['access_token'])) {
                 $this->log('OAuth Token Retrieved', ['http_code' => $http_code]);
                 return [
                     'success' => true,
@@ -190,6 +237,19 @@ class MpesaAPI {
      */
     public function initiateSTKPush($phone_number, $amount, $account_reference, $transaction_desc, $callback_url) {
         try {
+            $configuration_error = self::configurationError([
+                'environment' => $this->environment,
+                'consumer_key' => $this->consumer_key,
+                'consumer_secret' => $this->consumer_secret,
+                'shortcode' => $this->shortcode,
+                'passkey' => $this->passkey,
+                'transaction_type' => $this->transaction_type,
+                'callback_url' => $callback_url
+            ]);
+            if ($configuration_error !== null) {
+                return ['success' => false, 'message' => $configuration_error];
+            }
+
             // Validate inputs
             $phone_number = $this->formatPhoneNumber($phone_number);
             if (!$phone_number) {
@@ -216,7 +276,7 @@ class MpesaAPI {
                 'BusinessShortCode' => $this->shortcode,
                 'Password' => $password,
                 'Timestamp' => $timestamp,
-                'TransactionType' => 'CustomerPayBillOnline',
+                'TransactionType' => $this->transaction_type,
                 'Amount' => $amount,
                 'PartyA' => $phone_number,
                 'PartyB' => $this->shortcode,
@@ -235,7 +295,8 @@ class MpesaAPI {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             
             $response = curl_exec($ch);
@@ -259,7 +320,14 @@ class MpesaAPI {
                 'response_code' => $result['ResponseCode'] ?? null
             ]);
             
-            if ($http_code === 200 && $result['ResponseCode'] == '0') {
+            if ($http_code === 200 && isset($result['ResponseCode']) && (string)$result['ResponseCode'] === '0') {
+                if (empty($result['CheckoutRequestID']) || empty($result['MerchantRequestID'])) {
+                    $this->log('STK Push response missing request identifiers', [
+                        'http_code' => $http_code
+                    ], 'ERROR');
+                    return ['success' => false, 'message' => 'M-Pesa returned an incomplete payment response. Please try again.'];
+                }
+
                 // Store transaction in database
                 $this->storePendingTransaction(
                     $result['CheckoutRequestID'],
@@ -311,7 +379,7 @@ class MpesaAPI {
             // Already in correct format
             return $phone;
         }
-        
+
         return false;
     }
     
@@ -319,32 +387,27 @@ class MpesaAPI {
      * Store pending transaction in database
      */
     private function storePendingTransaction($checkout_request_id, $merchant_request_id, $phone_number, $amount, $account_reference) {
-        try {
-            $stmt = $this->pdo->prepare("
-                INSERT INTO mpesa_transactions (
-                    checkout_request_id, merchant_request_id, phone_number,
-                    amount, account_reference, status, created_at
-                ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
-                ON DUPLICATE KEY UPDATE
-                    updated_at = NOW()
-            ");
-            
-            $stmt->execute([
-                $checkout_request_id,
-                $merchant_request_id,
-                $phone_number,
-                $amount,
-                $account_reference
-            ]);
-            
-            $this->log('Transaction Stored', [
-                'checkout_request_id' => $checkout_request_id,
-                'account_reference' => $account_reference
-            ]);
-            
-        } catch (PDOException $e) {
-            $this->log('Database Error', ['error' => $e->getMessage()], 'ERROR');
-        }
+        $stmt = $this->pdo->prepare("
+            INSERT INTO mpesa_transactions (
+                checkout_request_id, merchant_request_id, phone_number,
+                amount, account_reference, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, 'pending', NOW())
+            ON DUPLICATE KEY UPDATE
+                updated_at = NOW()
+        ");
+
+        $stmt->execute([
+            $checkout_request_id,
+            $merchant_request_id,
+            $phone_number,
+            $amount,
+            $account_reference
+        ]);
+
+        $this->log('Transaction Stored', [
+            'checkout_request_id' => $checkout_request_id,
+            'account_reference' => $account_reference
+        ]);
     }
     
     /**
@@ -392,6 +455,16 @@ class MpesaAPI {
                     'checkout_request_id' => $checkout_request_id
                 ], 'WARNING');
                 return ['success' => false, 'message' => 'Transaction not found'];
+            }
+
+            if (
+                empty($merchant_request_id) ||
+                !hash_equals((string)$transaction['merchant_request_id'], (string)$merchant_request_id)
+            ) {
+                $this->log('Merchant Request ID Mismatch', [
+                    'checkout_request_id' => $checkout_request_id
+                ], 'ERROR');
+                return ['success' => false, 'message' => 'Invalid callback'];
             }
             
             // Idempotency check - if already processed, return success
@@ -642,7 +715,8 @@ class MpesaAPI {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             
             $response = curl_exec($ch);

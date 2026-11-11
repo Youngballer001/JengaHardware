@@ -11,7 +11,7 @@ header('Content-Type: application/json');
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Response helper
 function jsonResponse($success, $message, $data = []) {

@@ -22,7 +22,7 @@ if ($_SESSION['user_role'] !== 'customer') {
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 try {
     $pdo = new PDO(
@@ -321,21 +321,33 @@ include 'includes/header.php';
                             
                             <div class="form-group">
                                 <label for="current_password">Current Password</label>
-                                <input type="password" id="current_password" name="current_password" 
-                                       class="form-control" required>
+                                <div class="password-field">
+                                    <input type="password" id="current_password" name="current_password"
+                                           class="form-control" autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle" data-password-toggle="current_password"
+                                            aria-controls="current_password" aria-pressed="false">Show</button>
+                                </div>
                             </div>
                             
                             <div class="form-group">
                                 <label for="new_password">New Password</label>
-                                <input type="password" id="new_password" name="new_password" 
-                                       class="form-control" required>
+                                <div class="password-field">
+                                    <input type="password" id="new_password" name="new_password"
+                                           class="form-control" autocomplete="new-password" required>
+                                    <button type="button" class="password-toggle" data-password-toggle="new_password"
+                                            aria-controls="new_password" aria-pressed="false">Show</button>
+                                </div>
                                 <small>At least 8 characters with uppercase, lowercase, and number</small>
                             </div>
                             
                             <div class="form-group">
                                 <label for="confirm_password">Confirm New Password</label>
-                                <input type="password" id="confirm_password" name="confirm_password" 
-                                       class="form-control" required>
+                                <div class="password-field">
+                                    <input type="password" id="confirm_password" name="confirm_password"
+                                           class="form-control" autocomplete="new-password" required>
+                                    <button type="button" class="password-toggle" data-password-toggle="confirm_password"
+                                            aria-controls="confirm_password" aria-pressed="false">Show</button>
+                                </div>
                             </div>
                             
                             <button type="submit" class="btn btn-primary">Change Password</button>
@@ -379,7 +391,7 @@ include 'includes/header.php';
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #292e33, #f97316);
     color: white;
     display: flex;
     align-items: center;
@@ -411,7 +423,7 @@ include 'includes/header.php';
 .dashboard-nav a:hover,
 .dashboard-nav a.active {
     background: #f7fafc;
-    color: #667eea;
+    color: #f97316;
 }
 
 .dashboard-nav a.text-danger:hover {
@@ -440,7 +452,7 @@ include 'includes/header.php';
 }
 
 .stat-card {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #292e33, #f97316);
     color: white;
     padding: 25px;
     border-radius: 8px;
@@ -509,7 +521,7 @@ include 'includes/header.php';
 .order-amount {
     font-size: 18px;
     font-weight: 700;
-    color: #667eea;
+    color: #f97316;
 }
 
 .status-badge {
@@ -553,9 +565,9 @@ include 'includes/header.php';
 
 .filter-btn:hover,
 .filter-btn.active {
-    background: #667eea;
+    background: #f97316;
     color: white;
-    border-color: #667eea;
+    border-color: #f97316;
 }
 
 .orders-table-container {

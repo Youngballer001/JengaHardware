@@ -10,7 +10,7 @@ session_start();
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'jengo_hardware');
+define('DB_NAME', 'jengo hardware');
 
 // Connect to database
 try {
@@ -129,6 +129,10 @@ switch ($action) {
 // ============================================
 
 function handleAddToCart($pdo) {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(false, "Invalid security token. Please refresh the page and try again.");
+    }
+
     $product_id = (int)($_POST['product_id'] ?? 0);
     $quantity = (int)($_POST['quantity'] ?? 1);
     
@@ -178,6 +182,10 @@ function handleAddToCart($pdo) {
 }
 
 function handleUpdateCart($pdo) {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(false, "Invalid security token. Please refresh the page and try again.");
+    }
+
     $product_id = (int)($_POST['product_id'] ?? 0);
     $quantity = (int)($_POST['quantity'] ?? 0);
     
@@ -225,6 +233,10 @@ function handleUpdateCart($pdo) {
 }
 
 function handleRemoveFromCart() {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(false, "Invalid security token. Please refresh the page and try again.");
+    }
+
     $product_id = (int)($_POST['product_id'] ?? 0);
     
     if ($product_id <= 0) {
@@ -242,6 +254,10 @@ function handleRemoveFromCart() {
 }
 
 function handleClearCart() {
+    if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        jsonResponse(false, "Invalid security token. Please refresh the page and try again.");
+    }
+
     $_SESSION['cart'] = [];
     jsonResponse(true, "Cart cleared");
 }
@@ -279,6 +295,18 @@ function handleCreateOrder($pdo) {
     $delivery_method = sanitize($_POST['delivery_method'] ?? 'pickup');
     $payment_method = sanitize($_POST['payment_method'] ?? 'cash');
     $order_notes = sanitize($_POST['order_notes'] ?? '');
+
+    if (!in_array($delivery_method, ['pickup', 'standard', 'express'], true)) {
+        redirectWithMessage('checkout.php', "Please select a valid delivery method.");
+    }
+
+    if (!in_array($payment_method, ['mpesa', 'paystack', 'cash'], true)) {
+        redirectWithMessage('checkout.php', "Please select a valid payment method.");
+    }
+
+    if (empty($_POST['agree_terms'])) {
+        redirectWithMessage('checkout.php', "Please accept the terms and conditions to continue.");
+    }
     
     // Validate required fields
     if (empty($customer_name) || empty($customer_email) || empty($customer_phone)) {
@@ -439,8 +467,18 @@ function handleCreateOrder($pdo) {
             'order_number' => $order_number,
             'total' => $total_amount
         ];
-        
-        // Redirect to order confirmation
+        $_SESSION['guest_email'] = $customer_email;
+
+        if ($payment_method === 'mpesa') {
+            header("Location: payments/mpesa-payment-page.php?order=" . urlencode($order_number));
+            exit();
+        }
+
+        if ($payment_method === 'paystack') {
+            header("Location: payments/paystack-payment-page.php?order=" . urlencode($order_number));
+            exit();
+        }
+
         redirectWithMessage(
             "order-confirmation.php?order=" . $order_number,
             "Order placed successfully!",
@@ -576,12 +614,15 @@ function handleCancelOrder($pdo) {
 function handleUpdateProfile($pdo) {
     // Must be logged in
     if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-        redirectWithMessage('auth.php', "Please login to update profile");
+        header("Location: auth.php?action=login");
+        exit();
     }
     
     // Validate CSRF
     if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
-        redirectWithMessage('profile.php', "Invalid security token");
+        $_SESSION['profile_error'] = "Invalid security token. Please try again.";
+        header("Location: customer.php?tab=profile");
+        exit();
     }
     
     $user_id = $_SESSION['user_id'];
@@ -589,7 +630,9 @@ function handleUpdateProfile($pdo) {
     $phone = sanitize($_POST['phone'] ?? '');
     
     if (empty($name)) {
-        redirectWithMessage('profile.php', "Name is required");
+        $_SESSION['profile_error'] = "Name is required.";
+        header("Location: customer.php?tab=profile");
+        exit();
     }
     
     try {
@@ -599,11 +642,15 @@ function handleUpdateProfile($pdo) {
         // Update session
         $_SESSION['user_name'] = $name;
         
-        redirectWithMessage('profile.php', "Profile updated successfully", 'success');
+        $_SESSION['profile_success'] = "Profile updated successfully.";
+        header("Location: customer.php?tab=profile");
+        exit();
         
     } catch (PDOException $e) {
         error_log("Profile update failed: " . $e->getMessage());
-        redirectWithMessage('profile.php', "Failed to update profile");
+        $_SESSION['profile_error'] = "Failed to update profile. Please try again.";
+        header("Location: customer.php?tab=profile");
+        exit();
     }
 }
 
@@ -632,8 +679,11 @@ function handleChangePassword($pdo) {
         jsonResponse(false, "New passwords do not match");
     }
     
-    if (strlen($new_password) < 8) {
-        jsonResponse(false, "Password must be at least 8 characters");
+    if (strlen($new_password) < 8
+        || !preg_match('/[A-Z]/', $new_password)
+        || !preg_match('/[a-z]/', $new_password)
+        || !preg_match('/[0-9]/', $new_password)) {
+        jsonResponse(false, "Password must be at least 8 characters with uppercase, lowercase, and number");
     }
     
     try {
